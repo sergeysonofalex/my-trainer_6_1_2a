@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Роль данных в ИИ — тренажёр для 6 класса</title>
+<style>
+:root{
+  --green:#2e9e6b; --green-dark:#1e6b47;
+  --blue:#2f74c0;  --blue-dark:#1f4f85;
+  --ink:#1d2b36;   --muted:#5f7080;
+  --card:#ffffff;  --line:#dbe6ee;
+  --red:#d9534f;   --amber:#c9861f;
+  --radius:18px;
+  --shadow:0 6px 20px rgba(31,79,133,.10);
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; overflow:hidden;
+  font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  font-size:15px; color:var(--ink);
+  background:linear-gradient(135deg,#eef7f2 0%,#eaf2fc 55%,#f7fbff 100%);
+  -webkit-font-smoothing:antialiased;
+}
+#app{height:100vh; display:flex; flex-direction:column;}
+.screen{display:none; flex:1; min-height:0; flex-direction:column;}
+.screen.active{display:flex;}
+
+.btn{
+  border:none; border-radius:12px; padding:11px 22px;
+  font-size:15px; font-weight:700; font-family:inherit; cursor:pointer;
+  transition:transform .12s, box-shadow .2s, background .2s, border-color .2s, filter .2s;
+}
+.btn:active{transform:translateY(1px);}
+.btn-primary{
+  background:linear-gradient(135deg,#3bb37c,#2b8b5f); color:#fff;
+  box-shadow:0 6px 16px rgba(46,158,107,.32);
+}
+.btn-primary:hover{filter:brightness(1.06);}
+.btn-primary:disabled{background:#cbd8d2; color:#f4f8f6; box-shadow:none; cursor:not-allowed; filter:none;}
+.btn-ghost{background:#fff; color:var(--blue-dark); border:2px solid #d7e4f0;}
+.btn-ghost:hover{border-color:var(--blue);}
+.btn-ghost:disabled{opacity:.4; cursor:not-allowed; border-color:#e3ecf3;}
+.hidden{display:none !important;}
+
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 24px; background:rgba(255,255,255,.78);
+  border-bottom:1px solid var(--line);
+}
+.topbar-title{font-weight:700; font-size:16px; color:var(--blue-dark);}
+.topbar-right{display:flex; align-items:center; gap:12px; font-size:13px; font-weight:600; color:var(--muted);}
+.pill{background:#e8f3ec; color:var(--green-dark); padding:4px 13px; border-radius:999px; font-weight:700; font-size:12px;}
+.pill.b{background:#e9f0fb; color:var(--blue-dark);}
+
+.task-nav{
+  display:flex; gap:9px; padding:9px 26px; align-items:center;
+  background:rgba(255,255,255,.65);
+  border-bottom:1px solid var(--line);
+  overflow-x:auto;
+}
+.task-nav-label{
+  font-size:11.5px; font-weight:800; color:var(--muted);
+  text-transform:uppercase; letter-spacing:.06em;
+  margin-right:4px; white-space:nowrap;
+}
+.task-nav-btn{
+  width:36px; height:36px; border-radius:50%; flex:none;
+  border:2px solid var(--line); background:#fff;
+  color:var(--muted); font-weight:800; font-size:13.5px;
+  cursor:pointer; transition:.15s; font-family:inherit;
+  display:flex; align-items:center; justify-content:center;
+}
+.task-nav-btn:hover{border-color:var(--blue); color:var(--blue-dark); transform:translateY(-1px);}
+.task-nav-btn.current{
+  background:var(--blue); color:#fff; border-color:var(--blue);
+  box-shadow:0 4px 12px rgba(47,116,192,.3);
+}
+.task-nav-btn.done{border-color:var(--green); color:var(--green-dark); background:#e8f7ef;}
+.task-nav-btn.done.current{background:var(--blue); color:#fff; border-color:var(--blue);}
+
+.progress{height:6px; background:#e3ecf3;}
+.progress > div{
+  height:100%; width:0; border-radius:0 999px 999px 0;
+  background:linear-gradient(90deg,#3bb37c,#2f74c0);
+  transition:width .3s ease;
+}
+.stage{flex:1; min-height:0; overflow-y:auto; padding:18px 26px 22px;}
+.navbar{
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:12px 26px; background:rgba(255,255,255,.82);
+  border-top:1px solid var(--line);
+}
+.nav-right{display:flex; gap:12px; margin-left:auto;}
+
+.auth-wrap{flex:1; display:flex; align-items:center; justify-content:center; padding:24px;}
+.auth-card{
+  width:min(580px,92vw); background:#fff; border-radius:24px;
+  padding:34px 40px 30px; text-align:center;
+  border:1px solid var(--line); box-shadow:0 18px 48px rgba(31,79,133,.14);
+}
+.auth-badge{
+  display:inline-block; background:#e9f0fb; color:var(--blue-dark);
+  font-size:12.5px; font-weight:700; padding:6px 15px; border-radius:999px;
+}
+.auth-card h1{font-size:26px; line-height:1.25; margin:16px 0 10px; color:var(--blue-dark);}
+.auth-card .sub{font-size:15px; line-height:1.55; color:var(--muted); margin:0 0 22px;}
+.auth-card label{display:block; text-align:left; font-weight:700; font-size:14px; margin-bottom:8px;}
+#nameInput{
+  width:100%; padding:14px 16px; font-size:17px; font-family:inherit;
+  border-radius:14px; border:2px solid var(--green); outline:none;
+  background:#f7fdf9; color:var(--ink);
+  box-shadow:0 0 0 5px rgba(46,158,107,.16);
+  transition:box-shadow .2s, background .2s;
+}
+#nameInput:focus{box-shadow:0 0 0 7px rgba(46,158,107,.26); background:#fff;}
+.hint{font-size:13px; color:var(--muted); margin:9px 0 18px; text-align:left; min-height:17px;}
+.auth-meta{margin-top:16px; font-size:12.5px; color:var(--muted);}
+
+.slide{
+  display:grid; grid-template-columns:1.12fr .88fr; gap:26px;
+  max-width:1160px; margin:0 auto; align-items:start;
+}
+.slide h2{font-size:23px; margin:0 0 12px; color:var(--blue-dark); line-height:1.25;}
+.lead{font-size:16.5px; line-height:1.55; margin:0 0 12px;}
+.bullets{margin:0 0 12px; padding-left:20px; font-size:15.5px; line-height:1.72;}
+.bullets li{margin-bottom:3px;}
+.keynote{
+  background:#eef8f2; border-left:5px solid var(--green);
+  border-radius:12px; padding:12px 16px; font-size:15px; line-height:1.5;
+  color:#1e5a3f; font-weight:600;
+}
+.checklist{list-style:none; margin:0 0 14px; padding:0; font-size:15.2px; line-height:1.5;}
+.checklist li{
+  background:#fff; border:1px solid var(--line); border-radius:12px;
+  padding:9px 14px; margin-bottom:7px;
+}
+.checklist li::before{content:'✓'; color:var(--green); font-weight:800; margin-right:8px;}
+
+.visual{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:18px;
+}
+.v-caption{font-size:12.5px; color:var(--muted); text-align:center; margin-top:12px;}
+.v-chips{display:flex; flex-wrap:wrap; gap:9px; justify-content:center;}
+.chip{
+  background:#eef4fb; color:var(--blue-dark); font-weight:700; font-size:15px;
+  padding:9px 15px; border-radius:12px; border:1px solid #dbe8f6;
+}
+.v-chain{display:flex; flex-direction:column; align-items:center; gap:6px;}
+.v-node{
+  width:100%; text-align:center; padding:11px; border-radius:13px;
+  font-weight:700; font-size:15px; border:2px solid;
+}
+.v-node.n1{border-color:#b9d9f0; background:#eef6fd; color:#20527f;}
+.v-node.n2{border-color:#b8e3cd; background:#eefaf3; color:#1e6b47;}
+.v-node.n3{border-color:#f0d9a8; background:#fdf7e8; color:#8a6318;}
+.v-arrow{font-size:19px; color:#9db3c4; line-height:1;}
+.v-table{width:100%; border-collapse:collapse; font-size:14px;}
+.v-table th{
+  text-align:left; padding:9px 10px; background:#f0f6fc; color:var(--blue-dark);
+  font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;
+}
+.v-table td{padding:10px; border-top:1px solid var(--line); vertical-align:top;}
+.v-table td:first-child{font-weight:700; color:var(--green-dark); white-space:nowrap;}
+.v-analogy{display:flex; align-items:center; justify-content:center; gap:14px;}
+.v-circle{
+  width:104px; height:104px; border-radius:50%; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:2px; font-size:34px;
+  background:#eef6fd; border:2px solid #cfe3f5;
+}
+.v-circle span{font-size:12.5px; font-weight:700; color:var(--blue-dark);}
+.v-stack{display:flex; flex-direction:column; gap:8px;}
+.v-row{
+  display:flex; align-items:center; gap:10px; background:#f6faff;
+  border:1px solid #dbe8f6; border-radius:12px; padding:9px 12px; font-size:14px; font-weight:600;
+}
+.v-labeled{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+.v-photo{
+  width:88px; border-radius:14px; background:#f6faff; border:1px solid #dbe8f6;
+  padding:10px 6px; text-align:center; font-size:32px;
+}
+.v-photo .tag{
+  display:block; margin-top:6px; font-size:11.5px; font-weight:800;
+  background:#e8f7ef; color:var(--green-dark); border-radius:8px; padding:3px 6px;
+}
+.v-photo .tag.muted{background:#f1f4f7; color:#8a99a6;}
+.v-garbage{display:flex; align-items:center; justify-content:center; gap:12px; font-size:36px;}
+.v-bars{display:flex; flex-direction:column; gap:11px;}
+.bar-row{display:flex; align-items:center; gap:10px; font-size:13px; font-weight:700; color:var(--muted);}
+.bar-row span{width:74px; flex:none;}
+.bar{height:16px; border-radius:999px; background:linear-gradient(90deg,#5cc79a,#2f74c0);}
+.v-cats{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+.cat-dot{
+  width:64px; height:64px; border-radius:16px; display:flex; align-items:center;
+  justify-content:center; font-size:30px; border:2px solid #e6eef5;
+}
+
+.task-head h2{font-size:20px; margin:0 0 4px; color:var(--blue-dark);}
+.task-desc{font-size:14.5px; color:var(--muted); margin:0 0 16px;}
+.tip{font-size:13px; color:var(--muted); margin:14px 0 0; text-align:center;}
+.wrap-narrow{max-width:1000px; margin:0 auto;}
+
+.match-grid{display:grid; grid-template-columns:1fr 1.35fr; gap:18px; max-width:1000px; margin:0 auto;}
+.match-col{display:flex; flex-direction:column; gap:10px;}
+.match-head{font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:800;}
+.match-item{
+  display:flex; align-items:center; gap:10px; background:#fff;
+  border:2px solid var(--line); border-radius:14px; padding:12px 14px;
+  font-size:14.5px; line-height:1.4; cursor:pointer; user-select:none;
+  transition:border-color .15s, transform .12s, background .15s;
+}
+.match-item:hover{border-color:#a6cbb9; transform:translateY(-1px);}
+.match-item.selected{border-color:var(--blue) !important; box-shadow:0 0 0 4px rgba(47,116,192,.15);}
+.pair-badge{
+  margin-left:auto; flex:none; min-width:22px; height:22px; border-radius:50%;
+  color:#fff; font-size:12px; font-weight:800;
+  display:flex; align-items:center; justify-content:center;
+}
+
+/* --- Задание 2: Верно/Неверно --- */
+.tf-list{display:flex; flex-direction:column; gap:12px; max-width:1000px; margin:0 auto;}
+.tf-item{
+  display:flex; align-items:center; gap:18px; background:#fff;
+  border:2px solid var(--line); border-radius:16px; padding:16px 20px;
+  box-shadow:0 3px 10px rgba(31,79,133,.05);
+}
+.tf-num{
+  flex:none; width:40px; height:40px; border-radius:50%;
+  background:#eef4fb; color:var(--blue-dark);
+  font-weight:800; font-size:17px;
+  display:flex; align-items:center; justify-content:center;
+}
+.tf-text{
+  flex:1; font-size:16px; line-height:1.55;
+  font-weight:700; color:var(--ink);
+}
+.tf-btns{display:flex; gap:9px; flex:none;}
+.tf-btn{
+  font-family:inherit; font-size:14.5px; font-weight:800; cursor:pointer;
+  border:2px solid var(--line); background:#fff; color:var(--muted);
+  border-radius:10px; padding:9px 20px; transition:.15s;
+}
+.tf-btn:hover{border-color:#a6cbb9;}
+.tf-btn.active[data-v="true"]{background:#e8f7ef; border-color:var(--green); color:var(--green-dark);}
+.tf-btn.active[data-v="false"]{background:#fdeeee; border-color:var(--red); color:#a33b38;}
+
+/* --- Задание 3: Один из многих --- */
+.q{
+  margin:0 auto 20px; max-width:940px;
+  background:#fff; border:2px solid var(--line); border-radius:16px;
+  padding:20px 24px; box-shadow:0 3px 10px rgba(31,79,133,.05);
+}
+.q:last-child{margin-bottom:0;}
+.q-text{
+  font-weight:800; font-size:17px; margin-bottom:14px; line-height:1.5;
+  color:var(--ink);
+}
+.options{display:grid; gap:10px;}
+.option{
+  background:#f8fbfe; border:2px solid var(--line); border-radius:12px;
+  padding:13px 18px; font-size:15px; font-weight:600;
+  cursor:pointer; transition:.15s;
+  display:flex; align-items:center; gap:11px;
+}
+.option::before{
+  content:''; flex:none; width:18px; height:18px; border-radius:50%;
+  border:2px solid #c3d2de; background:#fff; transition:.15s;
+}
+.option:hover{border-color:#a6cbb9; background:#fff;}
+.option.selected{border-color:var(--blue); background:#f0f6ff; font-weight:700;}
+.option.selected::before{
+  border-color:var(--blue); background:var(--blue);
+  box-shadow:inset 0 0 0 3px #fff;
+}
+
+.sort-zones{display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:1000px; margin:0 auto;}
+.sort-zone{
+  background:#fff; border:2px dashed #c9dbe8; border-radius:16px;
+  padding:12px 14px; min-height:148px; transition:.15s; cursor:pointer;
+}
+.sort-zone.over{border-color:var(--green); background:#f2fbf6;}
+.sort-zone h4{margin:0 0 10px; font-size:13.5px; color:var(--blue-dark);}
+.zone-items{display:flex; flex-direction:column; gap:8px;}
+.pool-block{max-width:1000px; margin:18px auto 0;}
+.sort-pool{
+  display:flex; flex-wrap:wrap; gap:9px; min-height:58px; padding:11px;
+  border:2px dashed var(--line); border-radius:14px; background:#fff; cursor:pointer;
+}
+.sort-pool.over{border-color:var(--green); background:#f2fbf6;}
+.sort-item{
+  background:#fff; border:2px solid var(--line); border-radius:12px;
+  padding:9px 14px; font-size:14px; cursor:grab; user-select:none; transition:.15s;
+}
+.sort-item:hover{border-color:#a6cbb9;}
+.sort-item.selected{border-color:var(--blue); box-shadow:0 0 0 3px rgba(47,116,192,.15);}
+.sort-item.dragging{opacity:.45;}
+
+.cloze{
+  max-width:940px; margin:0 auto; background:#fff; border:1px solid var(--line);
+  border-radius:16px; padding:20px 24px; font-size:16px; line-height:2.1;
+  box-shadow:var(--shadow);
+}
+.blank{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:118px; height:34px; padding:0 10px; margin:0 5px;
+  border-bottom:3px solid var(--blue); border-radius:8px 8px 0 0;
+  background:#f3f9ff; color:var(--blue-dark); font-weight:800; font-size:15px;
+  cursor:pointer; vertical-align:middle; transition:.15s;
+}
+.blank:hover{background:#e6f2ff;}
+.blank.over{background:#d8ecff;}
+.blank.filled{border-bottom-color:var(--green); background:#eef8f2; color:var(--green-dark);}
+.words{display:flex; flex-wrap:wrap; gap:11px; justify-content:center; margin-top:20px;}
+.word{
+  background:#fff; border:2px solid var(--line); border-radius:12px;
+  padding:10px 18px; font-size:15px; font-weight:700; cursor:grab;
+  user-select:none; transition:.15s;
+}
+.word:hover{border-color:#a6cbb9;}
+.word.selected{border-color:var(--blue); box-shadow:0 0 0 4px rgba(47,116,192,.15);}
+.word.used{opacity:.3; pointer-events:none;}
+.word.dragging{opacity:.45;}
+
+.ds-grid{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
+  max-width:760px; margin:0 auto;
+}
+.ds-card{
+  background:#fff; border:2px solid var(--line); border-radius:16px;
+  padding:12px; cursor:pointer; position:relative; user-select:none;
+  transition:.15s; display:flex; align-items:center; justify-content:center;
+  min-height:104px;
+}
+.ds-card:hover{transform:translateY(-2px); border-color:#a6cbb9;}
+.ds-card svg{display:block;}
+.ds-card.selected{border-color:var(--red); background:#fdeeee;}
+.ds-card.selected::after{
+  content:'✕'; position:absolute; top:5px; right:9px;
+  color:var(--red); font-size:18px; font-weight:900;
+}
+
+.feedback{
+  display:none; margin:18px auto 0; max-width:1000px;
+  border-radius:14px; padding:13px 18px; font-size:15px; font-weight:600; line-height:1.45;
+}
+.feedback.show{display:block;}
+.feedback.good{background:#e8f7ef; color:#1e6b47; border:2px solid #b6e3cc;}
+.feedback.part{background:#fdf6e6; color:#8a6318; border:2px solid #f0dfae;}
+.feedback.bad{background:#fdeeee; color:#a33b38; border:2px solid #f3c9c8;}
+
+.correct-mark{border-color:var(--green) !important; background:#eefaf3 !important;}
+.wrong-mark{border-color:var(--red) !important; background:#fdeeee !important;}
+
+.bridge{
+  max-width:640px; margin:34px auto; background:#fff; border:1px solid var(--line);
+  border-radius:22px; padding:32px 36px; text-align:center; box-shadow:var(--shadow);
+}
+.bridge-icon{font-size:46px;}
+.bridge h2{font-size:22px; color:var(--blue-dark); margin:10px 0 12px;}
+.bridge p{font-size:15px; line-height:1.6; color:var(--muted); margin:0 0 12px;}
+.bridge .score-big{font-size:19px; color:var(--green-dark); font-weight:800;}
+.bridge-buttons{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:20px;}
+
+/* --- Итоговый экран --- */
+.result-wrap{flex:1; overflow-y:auto; display:flex; align-items:center; justify-content:center; padding:24px;}
+.result-card{
+  width:min(720px,94vw); background:#fff; border:1px solid var(--line);
+  border-radius:24px; padding:32px 40px; text-align:center;
+  box-shadow:0 18px 48px rgba(31,79,133,.14);
+}
+.result-badge{font-size:52px; line-height:1;}
+.result-card h1{font-size:22px; color:var(--blue-dark); margin:12px 0 4px;}
+.result-name{
+  font-size:16px; color:var(--muted); margin:6px 0 18px;
+  background:#f4f9fd; border-radius:12px; padding:10px 18px;
+  display:inline-block;
+}
+.result-name b{
+  color:var(--blue-dark); font-weight:800; font-size:18px;
+}
+.result-score{font-size:46px; font-weight:800; color:var(--green-dark); line-height:1;}
+.result-score small{font-size:16px; color:var(--muted); font-weight:600;}
+.result-grade{
+  display:inline-block; margin-top:14px; padding:8px 20px; border-radius:999px;
+  font-weight:800; font-size:16px;
+}
+.result-grade.excellent{background:#e8f7ef; color:#1e6b47;}
+.result-grade.good{background:#e9f0fb; color:var(--blue-dark);}
+.result-grade.ok{background:#fdf6e6; color:#8a6318;}
+.result-grade.low{background:#fdeeee; color:#a33b38;}
+.result-desc{font-size:15px; line-height:1.6; color:var(--ink); margin:14px auto 0; max-width:560px;}
+.result-breakdown{
+  margin:20px auto 0; max-width:520px; text-align:left;
+  border-top:1px solid var(--line); padding-top:14px;
+}
+.bd-row{
+  display:flex; justify-content:space-between; gap:14px;
+  font-size:13.5px; padding:5px 0; color:var(--muted);
+}
+.bd-row b{color:var(--ink); white-space:nowrap;}
+.result-actions{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:24px;}
+
+@media (max-width:1180px){
+  .slide{grid-template-columns:1fr;}
+  .match-grid{grid-template-columns:1fr;}
+  .ds-grid{grid-template-columns:repeat(4,1fr);}
+}
+
+/* ===== ШКОЛЬНЫЙ СТИЛЬ · крупный шрифт для ноутбуков ===== */
+:root{--board:#2d5a4a; --board-dark:#1f4034; --ink:#1b2a3a; --pen:#1d4ea0; --marker:#fff3a8; --paper:#fffef9; --grid:#d6e4f2; --line:#c9d8e6; --muted:#4a5c6e;}
+body{
+  font-family:Verdana,'Segoe UI',Tahoma,Arial,sans-serif; font-size:20px; line-height:1.5; color:var(--ink);
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px;
+}
+.btn{font-size:20px; padding:14px 30px; border-radius:10px;}
+.btn-primary{background:var(--pen); box-shadow:0 4px 0 #12336e;}
+.btn-primary:hover{filter:none; background:#2559b8;}
+.btn-primary:disabled{background:#c5ced8; color:#f4f6f8; box-shadow:0 4px 0 #a9b4bf;}
+.btn-ghost{border:2px solid var(--pen); color:var(--pen); font-size:19px;}
+.topbar{background:var(--board); border-bottom:5px solid #c9a24b; padding:14px 32px;}
+.topbar-title{color:#fff; font-size:22px;}
+.topbar-right{color:#e5f1ec; font-size:18px;}
+.pill{background:var(--marker); color:#5a4a00; font-size:16px; padding:6px 16px;}
+.pill.b{background:#cfe6ff; color:#12336e;}
+.task-nav{background:#fff; padding:12px 32px; gap:12px; border-bottom:2px solid var(--line);}
+.task-nav-label{font-size:17px; text-transform:none; letter-spacing:0; color:var(--muted);}
+.task-nav-btn{width:46px; height:46px; font-size:19px; pointer-events:none; border-width:3px;}
+.task-nav-btn.current{background:var(--pen); border-color:var(--pen);}
+.task-nav-btn.done{background:#dff3e6; border-color:#2e8b57; color:#1a5c3a;}
+.progress{height:8px; background:#dfe8f0;}
+.progress > div{background:#2e8b57;}
+.stage{padding:26px 40px 30px;}
+.navbar{padding:16px 40px; background:#fff; border-top:2px solid var(--line);}
+.auth-card,.result-card,.bridge{background:#fff; border:2px solid var(--line); border-radius:16px; box-shadow:0 8px 0 rgba(31,64,52,.12);}
+.auth-card{width:min(760px,94vw); padding:44px 54px;}
+.auth-badge{background:var(--marker); color:#5a4a00; font-size:17px;}
+.auth-card h1{font-size:34px; color:var(--board-dark);}
+.auth-card .sub{font-size:20px; color:var(--ink);}
+.auth-card label{font-size:20px;}
+#nameInput{font-size:22px; padding:16px 18px; border-radius:10px;}
+.hint{font-size:17px;} .auth-meta{font-size:16px;}
+.slide{max-width:1400px; grid-template-columns:1.1fr .9fr; gap:36px;}
+.slide-text{background:#fff; border:2px solid var(--line); border-left:8px solid var(--board); border-radius:12px; padding:26px 32px;}
+.slide h2{font-size:32px; color:var(--board-dark); margin-bottom:16px;}
+.lead{font-size:23px; line-height:1.55;}
+.bullets{font-size:22px; line-height:1.7;}
+.keynote{background:var(--marker); border-left:6px solid #c9a24b; color:#3b3200; font-size:21px; line-height:1.55; padding:16px 20px; border-radius:8px;}
+.checklist{font-size:21px;} .checklist li{padding:12px 16px;}
+.visual{border:2px solid var(--line); border-radius:12px; box-shadow:none; padding:24px;}
+.v-caption{font-size:17px;}
+.chip{font-size:21px; padding:11px 18px;}
+.v-node{font-size:21px; padding:14px;}
+.v-table{font-size:19px;} .v-table th{font-size:16px; text-transform:none;}
+.v-circle{width:130px; height:130px; font-size:44px;} .v-circle span{font-size:16px;}
+.v-row{font-size:19px; padding:12px 14px;}
+.v-photo{width:110px; font-size:40px;} .v-photo .tag{font-size:15px;}
+.bar-row{font-size:17px;} .bar-row span{width:100px;} .bar{height:22px;}
+.cat-dot{width:96px; height:96px;}
+.readbox{
+  display:flex; align-items:center; gap:16px; max-width:1400px; margin:24px auto 0;
+  background:var(--marker); border:3px solid #c9a24b; border-radius:12px;
+  padding:16px 24px; font-size:22px; font-weight:700; cursor:pointer; user-select:none; color:#3b3200;
+}
+.readbox input{width:32px; height:32px; flex:none; accent-color:#2e8b57; cursor:pointer;}
+.readbox.ok{background:#dff3e6; border-color:#2e8b57; color:#1a5c3a;}
+.task-head h2{font-size:30px; color:var(--board-dark);}
+.task-desc{font-size:21px; color:var(--ink); margin-bottom:20px;}
+.tip{font-size:17px;}
+.wrap-narrow{max-width:1100px;}
+.match-grid,.tf-list,.sort-zones,.pool-block,.feedback{max-width:1200px;}
+.match-head{font-size:16px; text-transform:none; letter-spacing:0; color:var(--muted);}
+.match-item{font-size:20px; padding:16px 18px; border-radius:10px; border-width:3px;}
+.pair-badge{min-width:30px; height:30px; font-size:16px;}
+.tf-item{padding:20px 24px; border-radius:12px; border-width:3px; gap:20px;}
+.tf-num{width:48px; height:48px; font-size:21px;}
+.tf-text{font-size:21px;}
+.tf-btn{font-size:19px; padding:12px 24px; border-radius:10px; border-width:3px;}
+.q{max-width:1100px; padding:26px 30px; border-radius:12px; border-width:3px;}
+.q-text{font-size:23px;}
+.option{font-size:20px; padding:16px 20px; border-radius:10px; border-width:3px;}
+.option::before{width:24px; height:24px;}
+.sort-zone{min-height:200px; border-radius:12px; border-width:3px;} .sort-zone h4{font-size:19px;}
+.sort-pool{min-height:80px; border-radius:12px; border-width:3px;}
+.sort-item{font-size:19px; padding:12px 16px; border-width:3px;}
+.cloze{max-width:1100px; font-size:23px; line-height:2.3; border-radius:12px; border-width:2px;}
+.blank{min-width:160px; height:44px; font-size:21px;}
+.word{font-size:21px; padding:12px 22px; border-width:3px;}
+.ds-grid{max-width:900px; gap:18px;} .ds-card{min-height:130px; border-width:3px;}
+.ds-card svg{width:84px; height:84px;}
+.feedback{font-size:20px; padding:16px 22px; border-radius:12px;}
+.bridge{max-width:820px; padding:40px 48px;}
+.bridge h2{font-size:32px; color:var(--board-dark);} .bridge p{font-size:21px; color:var(--ink);}
+.bridge .score-big{font-size:24px;} .bridge-icon{font-size:60px;}
+.result-card{width:min(900px,94vw); padding:40px 54px;}
+.result-card h1{font-size:30px; color:var(--board-dark);}
+.result-name{font-size:20px;} .result-name b{font-size:22px;}
+.result-score{font-size:64px;} .result-score small{font-size:22px;}
+.result-grade{font-size:22px;} .result-desc{font-size:20px;}
+.bd-row{font-size:18px; padding:7px 0;}
+@media (max-width:1180px){.slide{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <section id="screen-auth" class="screen active">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <div class="auth-badge">6 класс · Информатика и ИИ</div>
+        <h1>Роль данных в искусственном интеллекте</h1>
+        <p class="sub">Интерактивный тренажёр-практикум: разберёмся, чем отличаются данные, информация и знания, и как на данных учится искусственный интеллект.</p>
+        <label for="nameInput">Введи своё имя и фамилию</label>
+        <input id="nameInput" type="text" autocomplete="off" maxlength="40">
+        <div class="hint" id="nameHint">Поле подсвечено зелёным — начни вводить имя</div>
+        <button id="startBtn" class="btn btn-primary" disabled>Начать урок</button>
+        <div class="auth-meta">⏱ ~25 минут · 10 слайдов теории + тренажёр из 7 заданий (10 баллов)</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-theory" class="screen">
+    <header class="topbar">
+      <div class="topbar-title">Теория: данные → информация → знания → ИИ</div>
+      <div class="topbar-right"><span id="slideCounter">Слайд 1 из 10</span></div>
+    </header>
+    <div class="progress"><div id="slideProgress"></div></div>
+    <div class="stage" id="slideStage"></div>
+    <footer class="navbar">
+      <button id="prevSlide" class="btn btn-ghost">← Назад</button>
+      <button id="nextSlide" class="btn btn-primary">Далее →</button>
+    </footer>
+  </section>
+
+  <section id="screen-trainer" class="screen">
+    <header class="topbar">
+      <div class="topbar-title">Тренажёр: данные для обучения моделей ИИ</div>
+      <div class="topbar-right">
+        <span class="pill" id="levelPill">Уровень А</span>
+        <span id="taskCounter">Задание 1 из 7</span>
+      </div>
+    </header>
+    <div class="task-nav" id="taskNav">
+      <span class="task-nav-label">Задания:</span>
+    </div>
+    <div class="progress"><div id="taskProgress"></div></div>
+    <div class="stage" id="taskStage"></div>
+    <footer class="navbar" id="trainerNav">
+      <button id="prevTaskBtn" class="btn btn-ghost">← Назад</button>
+      <div class="nav-right">
+        <button id="checkBtn" class="btn btn-primary">Проверить</button>
+        <button id="nextBtn" class="btn btn-primary">Далее →</button>
+      </div>
+    </footer>
+  </section>
+
+  <section id="screen-result" class="screen">
+    <div class="result-wrap">
+      <div class="result-card">
+        <div class="result-badge" id="resultBadge">🏆</div>
+        <h1>Итоговая карточка результатов</h1>
+        <div class="result-name" id="resultName">Ученик</div>
+        <div class="result-score"><span id="resultScore">0</span> <small>из 10 баллов</small></div>
+        <div class="result-grade" id="resultGrade">—</div>
+        <div class="result-desc" id="resultDesc"></div>
+        <div class="result-breakdown" id="resultBreakdown"></div>
+        <div class="result-actions">
+          <button class="btn btn-primary" id="retryBtn">Пройти заново</button>
+          <button class="btn btn-ghost" id="theoryBtn">Повторить теорию</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+function shuffle(a){ const x = a.slice(); for(let i=x.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [x[i],x[j]]=[x[j],x[i]]; } return x; }
+
+const app = { name:'', slide:0, step:0, scores:{}, read:{} };
+
+/* ============ ТЕОРИЯ ============ */
+const SLIDES = [
+  {
+    title:'Что такое данные?',
+    body:`
+      <p class="lead">Данные — это отдельные факты, числа, символы и записи. Сами по себе они ничего не объясняют.</p>
+      <ul class="bullets">
+        <li>число <b>36,6</b>;</li>
+        <li>слово <b>«Москва»</b>;</li>
+        <li>набор пикселей на фотографии;</li>
+        <li>оценка <b>«5»</b> в электронном журнале.</li>
+      </ul>
+      <div class="keynote">Данные — это «сырьё». Пока мы не знаем, что они означают, пользы от них почти нет.</div>`,
+    visual:`
+      <div class="v-chips">
+        <span class="chip">36,6</span><span class="chip">2024</span>
+        <span class="chip">«Москва»</span><span class="chip">101101</span>
+        <span class="chip">★</span><span class="chip">?</span>
+        <span class="chip">0,1</span><span class="chip">7</span>
+      </div>
+      <div class="v-caption">Просто набор значений — без смысла и контекста</div>`
+  },
+  {
+    title:'Как данные становятся информацией и знаниями',
+    body:`
+      <p class="lead">Данные → Информация → Знания. На каждом шаге добавляется смысл.</p>
+      <ul class="bullets">
+        <li><b>Информация</b> — данные, у которых появился контекст и смысл.</li>
+        <li><b>Знания</b> — информация вместе с опытом и правилами: мы умеем её применять.</li>
+      </ul>
+      <div class="keynote">Данные: «36,6». Информация: «температура ученика 36,6 °C». Знание: «это норма, человек здоров».</div>`,
+    visual:`
+      <div class="v-chain">
+        <div class="v-node n1">ДАННЫЕ<br><small style="font-weight:600">36,6</small></div>
+        <div class="v-arrow">↓</div>
+        <div class="v-node n2">ИНФОРМАЦИЯ<br><small style="font-weight:600">температура 36,6 °C</small></div>
+        <div class="v-arrow">↓</div>
+        <div class="v-node n3">ЗНАНИЯ<br><small style="font-weight:600">36,6 °C — это норма</small></div>
+      </div>`
+  },
+  {
+    title:'Сравнение: данные, информация, знания',
+    body:`
+      <p class="lead">Один и тот же факт может быть и данными, и информацией, и знанием — всё зависит от контекста.</p>
+      <div class="keynote">
+        Данные отвечают на вопрос <b>«что записано?»</b><br>
+        Информация — <b>«что это значит?»</b><br>
+        Знания — <b>«что с этим делать?»</b>
+      </div>`,
+    visual:`
+      <table class="v-table">
+        <tr><th>Понятие</th><th>Пример про температуру</th></tr>
+        <tr><td>Данные</td><td>36,6</td></tr>
+        <tr><td>Информация</td><td>Температура тела ученика — 36,6 °C</td></tr>
+        <tr><td>Знания</td><td>36,6 °C — это норма, значит человек здоров</td></tr>
+      </table>`
+  },
+  {
+    title:'Что такое искусственный интеллект?',
+    body:`
+      <p class="lead">ИИ — это программы, которые решают «умные» задачи: распознают фотографии, понимают речь, переводят текст.</p>
+      <ul class="bullets">
+        <li>ИИ не получает готовые правила — он <b>учится на примерах</b>.</li>
+        <li>Так же учится человек: увидел много кошек — научился узнавать кошку.</li>
+      </ul>
+      <div class="keynote">Опыт → закономерность → умение. И у человека, и у ИИ в основе лежат данные.</div>`,
+    visual:`
+      <div class="v-analogy">
+        <div class="v-circle">🧠<span>Человек</span></div>
+        <div class="v-arrow" style="font-size:24px">≈</div>
+        <div class="v-circle" style="background:#eefaf3;border-color:#c2e6d4">🤖<span style="color:#1e6b47">ИИ</span></div>
+      </div>
+      <div class="v-caption">Оба учатся на примерах, а не по готовым правилам</div>`
+  },
+  {
+    title:'Обучающая выборка (датасет)',
+    body:`
+      <p class="lead">Датасет — это набор данных, на которых учится модель ИИ. Это «еда» для искусственного интеллекта.</p>
+      <ul class="bullets">
+        <li>10 000 фотографий с подписями;</li>
+        <li>100 000 фраз и их переводов на другой язык;</li>
+        <li>тысячи записей измерений и результатов.</li>
+      </ul>
+      <div class="keynote">Нет датасета — нет обучения. Модели просто не из чего делать выводы.</div>`,
+    visual:`
+      <div class="v-stack">
+        <div class="v-row">🖼️ 10 000 фотографий</div>
+        <div class="v-row">🔊 5 000 аудиозаписей</div>
+        <div class="v-row">📝 100 000 предложений</div>
+        <div class="v-row" style="background:#eefaf3;border-color:#c2e6d4">🤖 Модель ИИ учится</div>
+      </div>
+      <div class="v-caption">Датасет — «порция знаний» для модели</div>`
+  },
+  {
+    title:'Размеченные данные',
+    body:`
+      <p class="lead">Размеченные данные — это примеры, у которых есть готовый ответ (метка).</p>
+      <ul class="bullets">
+        <li>фото кошки + метка «кошка»;</li>
+        <li>письмо + метка «спам»;</li>
+        <li>данные без ответов называются <b>неразмеченными</b>.</li>
+      </ul>
+      <div class="keynote">Метки — это «подсказки учителя». По ним модель понимает, где она ошиблась, и исправляется.</div>`,
+    visual:`
+      <div class="v-labeled">
+        <div class="v-photo">🐱<span class="tag">кошка</span></div>
+        <div class="v-photo">🐶<span class="tag">собака</span></div>
+        <div class="v-photo">🐱<span class="tag">кошка</span></div>
+        <div class="v-photo">❓<span class="tag muted">без метки</span></div>
+      </div>
+      <div class="v-caption">Слева — размеченные примеры, справа — неразмеченный</div>`
+  },
+  {
+    title:'Качество данных',
+    body:`
+      <p class="lead">Правило: «Мусор на входе — мусор на выходе» (Garbage in — garbage out).</p>
+      <ul class="bullets">
+        <li>ошибки в подписях → модель путается;</li>
+        <li>устаревшие данные → неверные решения;</li>
+        <li>случайный шум → низкая точность.</li>
+      </ul>
+      <div class="keynote">Плохие данные нельзя исправить «умным» алгоритмом — результат всё равно будет плохим.</div>`,
+    visual:`
+      <div class="v-garbage">🗑️ <span style="font-size:22px;color:#9db3c4">→</span> ⚙️ <span style="font-size:22px;color:#9db3c4">→</span> 💥</div>
+      <div class="v-caption">Плохие данные на входе — плохой результат на выходе</div>`
+  },
+  {
+    title:'Объём данных',
+    body:`
+      <p class="lead">Чем больше примеров, тем больше закономерностей замечает модель.</p>
+      <ul class="bullets">
+        <li>5 фотографий — модель запомнит только их;</li>
+        <li>5 000 фотографий — модель увидит общие признаки.</li>
+      </ul>
+      <div class="keynote">Но объём помогает только вместе с качеством: миллион плохих фото ничему не научит.</div>`,
+    visual:`
+      <div class="v-bars">
+        <div class="bar-row"><span>5 фото</span><div class="bar" style="width:10%"></div></div>
+        <div class="bar-row"><span>500 фото</span><div class="bar" style="width:52%"></div></div>
+        <div class="bar-row"><span>5000 фото</span><div class="bar" style="width:100%"></div></div>
+      </div>
+      <div class="v-caption">Больше примеров → выше точность модели</div>`
+  },
+  {
+    title:'Разнообразие данных',
+    body:`
+      <p class="lead">Если учить модель только на рыжих кошках, чёрную она не узнает.</p>
+      <ul class="bullets">
+        <li>разные породы и окрасы;</li>
+        <li>разные ракурсы и освещение;</li>
+        <li>разные условия съёмки.</li>
+      </ul>
+      <div class="keynote">Однообразные данные → модель ошибается на всём, что не похоже на примеры из датасета.</div>`,
+    visual:`
+      <div class="v-cats"><div class="cat-dot" style="background:#fdf1e3"><svg viewBox="0 0 80 80" width="72" height="72" aria-hidden="true"><polygon points="14,34 16,8 36,22" fill="#e8893a"/><polygon points="66,34 64,8 44,22" fill="#e8893a"/><polygon points="19,28 19,15 30,23" fill="#f6b98a"/><polygon points="61,28 61,15 50,23" fill="#f6b98a"/><ellipse cx="40" cy="44" rx="27" ry="24" fill="#e8893a"/><ellipse cx="31" cy="41" rx="5" ry="6" fill="#7ccf5a"/><ellipse cx="49" cy="41" rx="5" ry="6" fill="#7ccf5a"/><ellipse cx="31" cy="41" rx="1.8" ry="5" fill="#111"/><ellipse cx="49" cy="41" rx="1.8" ry="5" fill="#111"/><polygon points="36,50 44,50 40,55" fill="#d9667a"/><path d="M40 55 q-4 6 -9 3 M40 55 q4 6 9 3" stroke="#6b4a3a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M18 50 l-12 -2 M18 54 l-12 3 M62 50 l12 -2 M62 54 l12 3" stroke="#8a6a5a" stroke-width="1.4" stroke-linecap="round"/></svg></div><div class="cat-dot" style="background:#eef6fd"><svg viewBox="0 0 80 80" width="72" height="72" aria-hidden="true"><polygon points="14,34 16,8 36,22" fill="#e8893a"/><polygon points="66,34 64,8 44,22" fill="#e8893a"/><polygon points="19,28 19,15 30,23" fill="#f6b98a"/><polygon points="61,28 61,15 50,23" fill="#f6b98a"/><ellipse cx="40" cy="44" rx="27" ry="24" fill="#e8893a"/><ellipse cx="31" cy="41" rx="5" ry="6" fill="#7ccf5a"/><ellipse cx="49" cy="41" rx="5" ry="6" fill="#7ccf5a"/><ellipse cx="31" cy="41" rx="1.8" ry="5" fill="#111"/><ellipse cx="49" cy="41" rx="1.8" ry="5" fill="#111"/><polygon points="36,50 44,50 40,55" fill="#d9667a"/><path d="M40 55 q-4 6 -9 3 M40 55 q4 6 9 3" stroke="#6b4a3a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M18 50 l-12 -2 M18 54 l-12 3 M62 50 l12 -2 M62 54 l12 3" stroke="#8a6a5a" stroke-width="1.4" stroke-linecap="round"/></svg></div><div class="cat-dot" style="background:#e9f6ec"><svg viewBox="0 0 80 80" width="72" height="72" aria-hidden="true"><polygon points="14,34 16,8 36,22" fill="#1c1c1f"/><polygon points="66,34 64,8 44,22" fill="#1c1c1f"/><polygon points="19,28 19,15 30,23" fill="#4a3a42"/><polygon points="61,28 61,15 50,23" fill="#4a3a42"/><ellipse cx="40" cy="44" rx="27" ry="24" fill="#1c1c1f"/><ellipse cx="31" cy="41" rx="5" ry="6" fill="#f2d12e"/><ellipse cx="49" cy="41" rx="5" ry="6" fill="#f2d12e"/><ellipse cx="31" cy="41" rx="1.8" ry="5" fill="#111"/><ellipse cx="49" cy="41" rx="1.8" ry="5" fill="#111"/><polygon points="36,50 44,50 40,55" fill="#e07a8e"/><path d="M40 55 q-4 6 -9 3 M40 55 q4 6 9 3" stroke="#6b4a3a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M18 50 l-12 -2 M18 54 l-12 3 M62 50 l12 -2 M62 54 l12 3" stroke="#8a6a5a" stroke-width="1.4" stroke-linecap="round"/></svg></div><div class="cat-dot" style="background:#fdf1e3"><svg viewBox="0 0 80 80" width="72" height="72" aria-hidden="true"><polygon points="14,34 16,8 36,22" fill="#e8893a"/><polygon points="66,34 64,8 44,22" fill="#e8893a"/><polygon points="19,28 19,15 30,23" fill="#f6b98a"/><polygon points="61,28 61,15 50,23" fill="#f6b98a"/><ellipse cx="40" cy="44" rx="27" ry="24" fill="#e8893a"/><ellipse cx="31" cy="41" rx="5" ry="6" fill="#7ccf5a"/><ellipse cx="49" cy="41" rx="5" ry="6" fill="#7ccf5a"/><ellipse cx="31" cy="41" rx="1.8" ry="5" fill="#111"/><ellipse cx="49" cy="41" rx="1.8" ry="5" fill="#111"/><polygon points="36,50 44,50 40,55" fill="#d9667a"/><path d="M40 55 q-4 6 -9 3 M40 55 q4 6 9 3" stroke="#6b4a3a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M18 50 l-12 -2 M18 54 l-12 3 M62 50 l12 -2 M62 54 l12 3" stroke="#8a6a5a" stroke-width="1.4" stroke-linecap="round"/></svg></div></div>
+      <div class="v-caption">Один объект — много разных примеров</div>`
+  },
+  {
+    title:'Закрепим термины',
+    body:`
+      <ul class="checklist">
+        <li><b>Данные</b> — факты и значения без контекста.</li>
+        <li><b>Информация</b> — данные, понятые в контексте.</li>
+        <li><b>Знания</b> — умение применять информацию.</li>
+        <li><b>Датасет</b> — набор примеров для обучения модели.</li>
+        <li><b>Разметка</b> — правильные ответы (метки) к примерам.</li>
+        <li><b>Качество, объём, разнообразие</b> — три условия хороших данных.</li>
+      </ul>
+      <div class="keynote">Готов? Дальше — тренажёр: 7 заданий и 10 баллов.</div>`,
+    visual:`
+      <div class="v-chain">
+        <div class="v-node n1">ДАННЫЕ</div>
+        <div class="v-arrow">↓</div>
+        <div class="v-node n2">ИНФОРМАЦИЯ</div>
+        <div class="v-arrow">↓</div>
+        <div class="v-node n3">ЗНАНИЯ</div>
+        <div class="v-arrow">↓</div>
+        <div class="v-node n2">ДАТАСЕТ → МОДЕЛЬ ИИ</div>
+      </div>`
+  }
+];
+
+function showScreen(id){
+  $$('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+}
+
+/* ============ АВТОРИЗАЦИЯ ============ */
+const nameInput = $('#nameInput');
+const startBtn  = $('#startBtn');
+const nameHint  = $('#nameHint');
+
+nameInput.addEventListener('input', () => {
+  const v = nameInput.value.trim();
+  startBtn.disabled = v.length === 0;
+  nameHint.textContent = v.length === 0
+    ? 'Поле подсвечено зелёным — начни вводить имя'
+    : 'Отлично! Можно начинать.';
+});
+nameInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !startBtn.disabled) startBtn.click();
+});
+startBtn.addEventListener('click', () => {
+  app.name = nameInput.value.trim();
+  app.slide = 0;
+  app.read = {};
+  showScreen('screen-theory');
+  renderSlide();
+});
+
+/* ============ ТЕОРИЯ ============ */
+const slideStage = $('#slideStage');
+const slideCounter = $('#slideCounter');
+const slideProgress = $('#slideProgress');
+const prevSlide = $('#prevSlide');
+const nextSlide = $('#nextSlide');
+
+function renderSlide(){
+  const s = SLIDES[app.slide];
+  slideStage.innerHTML =
+    '<div class="slide">' +
+      '<div class="slide-text"><h2>' + s.title + '</h2>' + s.body + '</div>' +
+      '<div class="slide-visual">' + s.visual + '</div>' +
+    '</div>' +
+    '<label class="readbox' + (app.read[app.slide] ? ' ok' : '') + '" id="readBox">' +
+      '<input type="checkbox" id="readChk"' + (app.read[app.slide] ? ' checked' : '') + '> Я прочитал(а) этот слайд — можно идти дальше' +
+    '</label>';
+  $('#readChk').addEventListener('change', function(){
+    app.read[app.slide] = this.checked;
+    $('#readBox').classList.toggle('ok', this.checked);
+    nextSlide.disabled = !this.checked;
+  });
+  slideCounter.textContent = 'Слайд ' + (app.slide + 1) + ' из ' + SLIDES.length;
+  slideProgress.style.width = ((app.slide + 1) / SLIDES.length * 100) + '%';
+  prevSlide.disabled = app.slide === 0;
+  nextSlide.disabled = !app.read[app.slide];
+  nextSlide.textContent = (app.slide === SLIDES.length - 1) ? 'Перейти к тренажёру →' : 'Далее →';
+  slideStage.scrollTop = 0;
+}
+prevSlide.addEventListener('click', () => {
+  if (app.slide > 0) { app.slide--; renderSlide(); }
+});
+nextSlide.addEventListener('click', () => {
+  if (app.slide < SLIDES.length - 1) { app.slide++; renderSlide(); }
+  else startTrainer();
+});
+
+/* ============ КОМПОНЕНТ: MATCHER ============ */
+const PAIR_COLORS = ['#2e9e6b', '#2f74c0', '#c9772f', '#8e5bd0'];
+const PAIR_LIGHT  = ['#e8f7ef', '#e9f1fb', '#fdf1e3', '#f2ecfc'];
+
+function createMatcher(cfg){
+  const st = { pairs:{}, selected:null, locked:false };
+  let rootEl = null;
+
+  function buildHtml(){
+    const leftHtml = cfg.left.map(l =>
+      '<div class="match-item" data-side="left" data-id="' + l.id + '"><span class="match-label">' + l.text + '</span></div>'
+    ).join('');
+    const rightHtml = cfg.right.map(r =>
+      '<div class="match-item" data-side="right" data-id="' + r.id + '"><span class="match-label">' + r.text + '</span></div>'
+    ).join('');
+    return '<div class="match-grid">' +
+      '<div class="match-col"><div class="match-head">' + (cfg.leftHead || 'Понятие') + '</div>' + leftHtml + '</div>' +
+      '<div class="match-col"><div class="match-head">' + (cfg.rightHead || 'Пример') + '</div>' + rightHtml + '</div>' +
+    '</div>' +
+    '<p class="tip">Нажми на элемент слева, затем на подходящий справа. Повторное нажатие снимает связь.</p>';
+  }
+
+  function paint(){
+    $$('.match-item', rootEl).forEach(el => {
+      el.classList.remove('matched', 'selected');
+      el.style.borderColor = '';
+      el.style.background = '';
+      const b = el.querySelector('.pair-badge');
+      if (b) b.remove();
+    });
+    const keys = Object.keys(st.pairs);
+    keys.forEach((lid, i) => {
+      const rid = st.pairs[lid];
+      const color = PAIR_COLORS[i % PAIR_COLORS.length];
+      const bg = PAIR_LIGHT[i % PAIR_LIGHT.length];
+      const num = i + 1;
+      [[lid, 'left'], [rid, 'right']].forEach(pair => {
+        const el = rootEl.querySelector('.match-item[data-side="' + pair[1] + '"][data-id="' + pair[0] + '"]');
+        if (!el) return;
+        el.classList.add('matched');
+        el.style.borderColor = color;
+        el.style.background = bg;
+        const badge = document.createElement('span');
+        badge.className = 'pair-badge';
+        badge.textContent = num;
+        badge.style.background = color;
+        el.appendChild(badge);
+      });
+    });
+    if (st.selected){
+      const el = rootEl.querySelector('.match-item[data-side="left"][data-id="' + st.selected + '"]');
+      if (el) el.classList.add('selected');
+    }
+  }
+
+  function onClick(el){
+    if (st.locked) return;
+    const side = el.dataset.side;
+    const id = el.dataset.id;
+    if (side === 'left'){
+      if (st.pairs[id]) { delete st.pairs[id]; st.selected = null; paint(); refreshCheckState(); return; }
+      st.selected = (st.selected === id) ? null : id;
+      paint();
+    } else {
+      const owner = Object.keys(st.pairs).find(k => st.pairs[k] === id);
+      if (owner) { delete st.pairs[owner]; paint(); refreshCheckState(); return; }
+      if (st.selected){
+        st.pairs[st.selected] = id;
+        st.selected = null;
+        paint();
+        refreshCheckState();
+      }
+    }
+  }
+
+  return {
+    html: buildHtml(),
+    mount: function(root){
+      rootEl = root;
+      $$('.match-item', rootEl).forEach(el => el.addEventListener('click', () => onClick(el)));
+    },
+    canCheck: function(){ return Object.keys(st.pairs).length === cfg.left.length; },
+    check: function(){
+      let correct = 0;
+      cfg.left.forEach(l => {
+        const rid = st.pairs[l.id];
+        const right = cfg.right.find(r => r.id === rid);
+        if (right && right.correct === l.id) correct++;
+      });
+      cfg.right.forEach(r => {
+        const el = rootEl.querySelector('.match-item[data-side="right"][data-id="' + r.id + '"]');
+        if (!el) return;
+        const lid = Object.keys(st.pairs).find(k => st.pairs[k] === r.id);
+        if (lid) el.classList.add(lid === r.correct ? 'correct-mark' : 'wrong-mark');
+      });
+      st.locked = true;
+      return { correct: correct, total: cfg.left.length };
+    }
+  };
+}
+
+/* ============ КОМПОНЕНТ: SORT ============ */
+function createSort(cfg){
+  let placement = {};
+  let selected = null;
+  let dragged = null;
+  let locked = false;
+  let rootEl = null;
+
+  function makeItem(it){
+    const el = document.createElement('div');
+    el.className = 'sort-item';
+    el.textContent = it.text;
+    el.dataset.id = it.id;
+    el.draggable = !locked;
+    if (selected === it.id) el.classList.add('selected');
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      if (locked) return;
+      selected = (selected === it.id) ? null : it.id;
+      paint();
+    });
+    el.addEventListener('dragstart', e => {
+      if (locked){ e.preventDefault(); return; }
+      dragged = it.id;
+      el.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', it.id);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    return el;
+  }
+
+  function buildHtml(){
+    const zones = cfg.zones.map(z =>
+      '<div class="sort-zone" data-dropzone="' + z.id + '">' +
+        '<h4>' + z.title + '</h4>' +
+        '<div class="zone-items" data-zone="' + z.id + '"></div>' +
+      '</div>'
+    ).join('');
+    return '<div class="sort-zones">' + zones + '</div>' +
+      '<div class="pool-block">' +
+        '<div class="match-head">Объекты — перетащи их в нужную категорию (или выбери и нажми на категорию)</div>' +
+        '<div class="sort-pool" data-dropzone="pool"></div>' +
+      '</div>';
+  }
+
+  function paint(){
+    $$('.zone-items', rootEl).forEach(z => z.innerHTML = '');
+    const pool = $('.sort-pool', rootEl);
+    pool.innerHTML = '';
+    cfg.items.forEach(it => {
+      const el = makeItem(it);
+      const zone = placement[it.id];
+      if (zone){
+        const target = rootEl.querySelector('.zone-items[data-zone="' + zone + '"]');
+        if (target) target.appendChild(el); else pool.appendChild(el);
+      } else {
+        pool.appendChild(el);
+      }
+    });
+  }
+
+  function place(id, zone){
+    if (zone === 'pool') delete placement[id];
+    else placement[id] = zone;
+    selected = null;
+    paint();
+    refreshCheckState();
+  }
+
+  return {
+    html: buildHtml(),
+    mount: function(root){
+      rootEl = root;
+      paint();
+      $$('[data-dropzone]', rootEl).forEach(zoneEl => {
+        zoneEl.addEventListener('dragover', e => { e.preventDefault(); zoneEl.classList.add('over'); });
+        zoneEl.addEventListener('dragleave', () => zoneEl.classList.remove('over'));
+        zoneEl.addEventListener('drop', e => {
+          e.preventDefault();
+          zoneEl.classList.remove('over');
+          if (locked) return;
+          const id = e.dataTransfer.getData('text/plain') || dragged;
+          if (!id) return;
+          place(id, zoneEl.dataset.dropzone);
+        });
+        zoneEl.addEventListener('click', () => {
+          if (locked || !selected) return;
+          place(selected, zoneEl.dataset.dropzone);
+        });
+      });
+    },
+    canCheck: function(){ return Object.keys(placement).length === cfg.items.length; },
+    check: function(){
+      let correct = 0;
+      cfg.items.forEach(it => {
+        const ok = placement[it.id] === it.cat;
+        if (ok) correct++;
+        const el = rootEl.querySelector('.sort-item[data-id="' + it.id + '"]');
+        if (el) el.classList.add(ok ? 'correct-mark' : 'wrong-mark');
+      });
+      locked = true;
+      const pts = correct === cfg.items.length ? 2 : (correct >= 4 ? 1 : 0);
+      return { points: pts, max: 2, text: 'Верно разложено ' + correct + ' из ' + cfg.items.length + ' объектов.' };
+    }
+  };
+}
+
+/* ============ КОМПОНЕНТ: CLOZE ============ */
+function createCloze(cfg){
+  const filled = {};
+  let selectedWord = null;
+  let draggedWord = null;
+  let locked = false;
+  let rootEl = null;
+
+  function buildHtml(){
+    return '<div class="cloze" id="clozeText"></div>' +
+           '<div class="words" id="clozeWords"></div>' +
+           '<p class="tip">Выбери слово внизу и нажми на пропуск — или перетащи слово в пропуск.</p>';
+  }
+
+  function paint(){
+    const textEl = $('.cloze', rootEl);
+    textEl.innerHTML = cfg.parts.map(p => {
+      if (p.t !== undefined) return p.t;
+      const w = filled[p.gap];
+      return '<span class="blank' + (w ? ' filled' : '') + '" data-gap="' + p.gap + '">' + (w || '&nbsp;') + '</span>';
+    }).join('');
+
+    const usedWords = Object.keys(filled).map(k => filled[k]);
+    const wordsEl = $('.words', rootEl);
+    wordsEl.innerHTML = cfg.words.map(w => {
+      const used = usedWords.indexOf(w) !== -1;
+      return '<span class="word' + (used ? ' used' : '') + (selectedWord === w ? ' selected' : '') +
+             '" data-word="' + w + '" draggable="' + (!used) + '">' + w + '</span>';
+    }).join('');
+
+    bind();
+  }
+
+  function setWord(gap, word){
+    Object.keys(filled).forEach(k => { if (filled[k] === word) delete filled[k]; });
+    filled[gap] = word;
+    selectedWord = null;
+    paint();
+    refreshCheckState();
+  }
+
+  function bind(){
+    $$('.word', rootEl).forEach(el => {
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        if (locked || el.classList.contains('used')) return;
+        selectedWord = (selectedWord === el.dataset.word) ? null : el.dataset.word;
+        paint();
+      });
+      el.addEventListener('dragstart', e => {
+        if (locked || el.classList.contains('used')){ e.preventDefault(); return; }
+        draggedWord = el.dataset.word;
+        el.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', el.dataset.word);
+      });
+      el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    });
+
+    $$('.blank', rootEl).forEach(el => {
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        if (locked) return;
+        const g = el.dataset.gap;
+        if (filled[g]){ delete filled[g]; paint(); refreshCheckState(); }
+        else if (selectedWord){ setWord(g, selectedWord); }
+      });
+      el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('over'); });
+      el.addEventListener('dragleave', () => el.classList.remove('over'));
+      el.addEventListener('drop', e => {
+        e.preventDefault();
+        el.classList.remove('over');
+        if (locked) return;
+        const w = e.dataTransfer.getData('text/plain') || draggedWord;
+        if (!w) return;
+        setWord(el.dataset.gap, w);
+      });
+    });
+  }
+
+  return {
+    html: buildHtml(),
+    mount: function(root){ rootEl = root; paint(); },
+    canCheck: function(){ return cfg.parts.filter(p => p.gap).every(p => filled[p.gap]); },
+    check: function(){
+      let correct = 0;
+      cfg.parts.forEach(p => {
+        if (!p.gap) return;
+        const ok = filled[p.gap] === p.answer;
+        if (ok) correct++;
+        const el = rootEl.querySelector('.blank[data-gap="' + p.gap + '"]');
+        if (el) el.classList.add(ok ? 'correct-mark' : 'wrong-mark');
+      });
+      locked = true;
+      const total = cfg.parts.filter(p => p.gap).length;
+      const pts = correct === total ? 1 : 0;
+      return { points: pts, max: 1, text: 'Правильно заполнено ' + correct + ' из ' + total + ' пропусков.' };
+    }
+  };
+}
+
+/* ============ ЗАДАНИЯ ============ */
+
+/* --- A1 --- */
+const A1_LEFT = [
+  { id:'data', text:'Данные' },
+  { id:'info', text:'Информация' },
+  { id:'know', text:'Знания' }
+];
+const A1_RIGHT = [
+  { id:'r1', text:'«36,6» — просто число, записанное в тетради', correct:'data' },
+  { id:'r2', text:'«Температура тела ученика — 36,6 °C»', correct:'info' },
+  { id:'r3', text:'«36,6 °C — это норма, значит, человек здоров»', correct:'know' }
+];
+
+function buildA1(){
+  const matcher = createMatcher({
+    left: A1_LEFT,
+    right: shuffle(A1_RIGHT),
+    leftHead: 'Понятие',
+    rightHead: 'Пример'
+  });
+  return {
+    html: '<p class="task-desc">Сопоставь понятие и подходящий пример из жизни.</p>' + matcher.html,
+    mount: function(root){ matcher.mount(root); },
+    canCheck: function(){ return matcher.canCheck(); },
+    check: function(){
+      const r = matcher.check();
+      const pts = r.correct === 3 ? 2 : (r.correct === 2 ? 1 : 0);
+      return { points: pts, max: 2, text: 'Верных пар: ' + r.correct + ' из ' + r.total + '.' };
+    }
+  };
+}
+
+/* --- A2: Верно / Неверно --- */
+const A2_ITEMS = [
+  { text:'Данные — это просто числа и символы, например «36,6» или «Москва». Сами по себе они ничего не объясняют.', answer:true },
+  { text:'Если показать ИИ всего 2 фотографии кошек, он сразу научится распознавать любых кошек в мире.', answer:false },
+  { text:'Размеченные данные — это примеры с готовым ответом. Например: фото кошки и подпись «кошка».', answer:true },
+  { text:'Чем больше хороших и правильных примеров в датасете, тем точнее учится модель ИИ.', answer:true },
+  { text:'Если в датасете много ошибок и мусора, модель ИИ всё равно будет работать идеально.', answer:false }
+];
+
+function buildA2(){
+  const answers = new Array(A2_ITEMS.length).fill(null);
+  let locked = false;
+  let rootEl = null;
+
+  function buildHtml(){
+    let rows = '';
+    for (let i = 0; i < A2_ITEMS.length; i++){
+      rows +=
+        '<div class="tf-item" data-i="' + i + '">' +
+          '<div class="tf-num">' + (i + 1) + '</div>' +
+          '<div class="tf-text">' + A2_ITEMS[i].text + '</div>' +
+          '<div class="tf-btns">' +
+            '<button type="button" class="tf-btn" data-v="true">Верно</button>' +
+            '<button type="button" class="tf-btn" data-v="false">Неверно</button>' +
+          '</div>' +
+        '</div>';
+    }
+    return '<p class="task-desc">Прочитай каждое утверждение и выбери: оно <b>верное</b> или <b>неверное</b>.</p>' +
+           '<div class="tf-list">' + rows + '</div>';
+  }
+
+  function paint(){
+    $$('.tf-item', rootEl).forEach((item, i) => {
+      $$('.tf-btn', item).forEach(btn => {
+        const isTrue = btn.dataset.v === 'true';
+        btn.classList.toggle('active', answers[i] !== null && answers[i] === isTrue);
+      });
+    });
+  }
+
+  return {
+    html: buildHtml(),
+    mount: function(root){
+      rootEl = root;
+      $$('.tf-item', rootEl).forEach((item, i) => {
+        $$('.tf-btn', item).forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (locked) return;
+            answers[i] = (btn.dataset.v === 'true');
+            paint();
+            refreshCheckState();
+          });
+        });
+      });
+    },
+    canCheck: function(){ return answers.every(a => a !== null); },
+    check: function(){
+      let correct = 0;
+      A2_ITEMS.forEach((it, i) => {
+        const ok = answers[i] === it.answer;
+        if (ok) correct++;
+        const el = rootEl.querySelector('.tf-item[data-i="' + i + '"]');
+        if (el) el.classList.add(ok ? 'correct-mark' : 'wrong-mark');
+      });
+      locked = true;
+      const pts = correct >= 5 ? 2 : (correct >= 3 ? 1 : 0);
+      return { points: pts, max: 2, text: 'Верных ответов: ' + correct + ' из ' + A2_ITEMS.length + '.' };
+    }
+  };
+}
+
+/* --- A3: Выбор ответа --- */
+const A3_QUESTIONS = [
+  {
+    q:'Как называют набор примеров, на которых учится модель искусственного интеллекта?',
+    options:[
+      'Компьютерная игра',
+      'Датасет (обучающая выборка)',
+      'Электронный учебник',
+      'Рабочий стол компьютера'
+    ],
+    correct:1
+  },
+  {
+    q:'Что такое «размеченные данные»?',
+    options:[
+      'Данные, которые стёрли с компьютера',
+      'Данные, раскрашенные в разные цвета',
+      'Данные, у которых есть готовый ответ (метка)',
+      'Данные без смысла и без ответов'
+    ],
+    correct:2
+  }
+];
+
+function buildA3(){
+  const answers = new Array(A3_QUESTIONS.length).fill(null);
+  let locked = false;
+  let rootEl = null;
+
+  function buildHtml(){
+    let out = '<p class="task-desc">Прочитай вопрос и выбери один правильный ответ.</p>';
+    for (let qi = 0; qi < A3_QUESTIONS.length; qi++){
+      const item = A3_QUESTIONS[qi];
+      out += '<div class="q" data-q="' + qi + '">' +
+             '<div class="q-text">' + (qi + 1) + '. ' + item.q + '</div>' +
+             '<div class="options">';
+      for (let oi = 0; oi < item.options.length; oi++){
+        out += '<div class="option" data-o="' + oi + '">' + item.options[oi] + '</div>';
+      }
+      out += '</div></div>';
+    }
+    return out;
+  }
+
+  function paint(){
+    $$('.q', rootEl).forEach((qEl, qi) => {
+      $$('.option', qEl).forEach((opEl, oi) => {
+        opEl.classList.toggle('selected', answers[qi] === oi);
+      });
+    });
+  }
+
+  return {
+    html: buildHtml(),
+    mount: function(root){
+      rootEl = root;
+      $$('.q', rootEl).forEach((qEl, qi) => {
+        $$('.option', qEl).forEach((opEl, oi) => {
+          opEl.addEventListener('click', () => {
+            if (locked) return;
+            answers[qi] = oi;
+            paint();
+            refreshCheckState();
+          });
+        });
+      });
+    },
+    canCheck: function(){ return answers.every(a => a !== null); },
+    check: function(){
+      let correct = 0;
+      A3_QUESTIONS.forEach((item, qi) => {
+        const ok = answers[qi] === item.correct;
+        if (ok) correct++;
+        const qEl = rootEl.querySelector('.q[data-q="' + qi + '"]');
+        if (!qEl) return;
+        $$('.option', qEl).forEach((opEl, oi) => {
+          if (oi === item.correct) opEl.classList.add('correct-mark');
+          else if (oi === answers[qi]) opEl.classList.add('wrong-mark');
+        });
+      });
+      locked = true;
+      const pts = correct === 2 ? 2 : (correct === 1 ? 1 : 0);
+      return { points: pts, max: 2, text: 'Правильных ответов: ' + correct + ' из 2.' };
+    }
+  };
+}
+
+/* --- A4: Сортировка --- */
+const A4_ITEMS = [
+  { id:'a', text:'Фотография кошки с подписью «кошка»', cat:'labeled' },
+  { id:'b', text:'1000 фотографий животных без подписей', cat:'unlabeled' },
+  { id:'c', text:'Аудиозапись слова «Привет» и текст «Привет»', cat:'labeled' },
+  { id:'d', text:'Снимки улиц, на которых не отмечены объекты', cat:'unlabeled' },
+  { id:'e', text:'Письма с метками «спам» и «не спам»', cat:'labeled' },
+  { id:'f', text:'Набор случайных чисел без пояснений', cat:'unlabeled' }
+];
+
+function buildA4(){
+  const sorter = createSort({
+    items: A4_ITEMS,
+    zones: [
+      { id:'labeled',   title:'🏷️ Размеченные данные (есть ответ-метка)' },
+      { id:'unlabeled', title:'📦 Неразмеченные данные (меток нет)' }
+    ]
+  });
+  return {
+    html: '<p class="task-desc">Раздели объекты на две категории: размеченные и неразмеченные данные.</p>' + sorter.html,
+    mount: function(root){ sorter.mount(root); },
+    canCheck: function(){ return sorter.canCheck(); },
+    check: function(){ return sorter.check(); }
+  };
+}
+
+/* --- B5: Найди ошибку в датасете --- */
+const APPLE_SVG =
+  '<svg viewBox="0 0 64 64" width="62" height="62" aria-hidden="true">' +
+    '<circle cx="32" cy="38" r="20" fill="#e74c3c"/>' +
+    '<circle cx="25" cy="32" r="7" fill="#ff8b7d" opacity="0.5"/>' +
+    '<rect x="31" y="8" width="2.5" height="12" rx="1" fill="#7a4a2b"/>' +
+    '<ellipse cx="39" cy="14" rx="7" ry="4" fill="#27ae60"/>' +
+  '</svg>';
+
+const PEAR_SVG =
+  '<svg viewBox="0 0 64 64" width="62" height="62" aria-hidden="true">' +
+    '<ellipse cx="32" cy="20" rx="10" ry="12" fill="#8bc34a"/>' +
+    '<ellipse cx="32" cy="42" rx="16" ry="14" fill="#8bc34a"/>' +
+    '<circle cx="27" cy="36" r="5" fill="#aed581" opacity="0.6"/>' +
+    '<rect x="31" y="4" width="2.5" height="10" rx="1" fill="#5d4037"/>' +
+    '<ellipse cx="38" cy="9" rx="5" ry="3" fill="#4caf50"/>' +
+  '</svg>';
+
+const B5_ITEMS = [
+  { id:1, svg:APPLE_SVG, fruit:'apple' },
+  { id:2, svg:APPLE_SVG, fruit:'apple' },
+  { id:3, svg:PEAR_SVG,  fruit:'pear'  },
+  { id:4, svg:APPLE_SVG, fruit:'apple' },
+  { id:5, svg:APPLE_SVG, fruit:'apple' },
+  { id:6, svg:PEAR_SVG,  fruit:'pear'  },
+  { id:7, svg:APPLE_SVG, fruit:'apple' },
+  { id:8, svg:APPLE_SVG, fruit:'apple' }
+];
+
+function buildB5(){
+  const selectedIds = new Set();
+  let locked = false;
+  let rootEl = null;
+
+  function buildHtml(){
+    let cards = '';
+    for (let i = 0; i < B5_ITEMS.length; i++){
+      const it = B5_ITEMS[i];
+      cards += '<div class="ds-card" data-id="' + it.id + '" title="Объект ' + (i + 1) + '">' + it.svg + '</div>';
+    }
+    return '<p class="task-desc">Ученик Петя собирал датасет для модели «Распознавание яблок». Но в папку случайно попали <b>лишние объекты</b>. Найди их и отметь — тогда датасет снова будет правильным.</p>' +
+           '<div class="ds-grid">' + cards + '</div>' +
+           '<p class="tip">Нажми на объект, чтобы пометить его как лишний (появится красный крестик).</p>';
+  }
+
+  function paint(){
+    $$('.ds-card', rootEl).forEach(el => {
+      el.classList.toggle('selected', selectedIds.has(Number(el.dataset.id)));
+    });
+  }
+
+  return {
+    html: buildHtml(),
+    mount: function(root){
+      rootEl = root;
+      $$('.ds-card', rootEl).forEach(el => {
+        el.addEventListener('click', () => {
+          if (locked) return;
+          const id = Number(el.dataset.id);
+          if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+          paint();
+          refreshCheckState();
+        });
+      });
+    },
+    canCheck: function(){ return selectedIds.size > 0; },
+    check: function(){
+      let correct = true;
+      B5_ITEMS.forEach(it => {
+        const sel = selectedIds.has(it.id);
+        const shouldSelect = (it.fruit === 'pear');
+        if (sel !== shouldSelect) correct = false;
+        const el = rootEl.querySelector('.ds-card[data-id="' + it.id + '"]');
+        if (el){
+          el.classList.remove('selected');
+          el.classList.add(sel === shouldSelect ? 'correct-mark' : 'wrong-mark');
+        }
+      });
+      locked = true;
+      const pts = correct ? 1 : 0;
+      return {
+        points: pts, max: 1,
+        text: correct
+          ? 'Верно! Ты исключил ровно 2 груши — в датасете остались только яблоки.'
+          : 'Нужно было исключить ровно 2 груши — зелёные плоды вытянутой формы. Это и есть шум в датасете.'
+      };
+    }
+  };
+}
+
+/* --- B6: Пропуски --- */
+function buildB6(){
+  const cloze = createCloze({
+    parts: [
+      { t:'Чтобы модель ИИ научилась распознавать объекты, ей нужен ' },
+      { gap:'g1', answer:'датасет' },
+      { t:' — большой набор примеров. Процесс, во время которого модель учится на примерах, называется ' },
+      { gap:'g2', answer:'обучение' },
+      { t:'. Чем больше качественных данных, тем выше ' },
+      { gap:'g3', answer:'точность' },
+      { t:' модели. А умение применять полученные выводы на практике — это ' },
+      { gap:'g4', answer:'знание' },
+      { t:'.' }
+    ],
+    words: ['датасет', 'обучение', 'точность', 'знание']
+  });
+  return {
+    html: '<p class="task-desc">Перетащи подходящие слова в пропуски текста.</p>' + cloze.html,
+    mount: function(root){ cloze.mount(root); },
+    canCheck: function(){ return cloze.canCheck(); },
+    check: function(){ return cloze.check(); }
+  };
+}
+
+/* --- B7: Сложные соответствия --- */
+const B7_LEFT = [
+  { id:'speech',    text:'Распознавание речи' },
+  { id:'auto',      text:'Автопилот автомобиля' },
+  { id:'translate', text:'Перевод текста' },
+  { id:'med',       text:'Диагноз по медицинским снимкам' }
+];
+const B7_RIGHT = [
+  { id:'x1', text:'Аудиозаписи голоса с текстовой расшифровкой', correct:'speech' },
+  { id:'x2', text:'Видео с камер и показания датчиков', correct:'auto' },
+  { id:'x3', text:'Пары предложений на двух языках', correct:'translate' },
+  { id:'x4', text:'Снимки с подтверждёнными врачами диагнозами', correct:'med' }
+];
+
+function buildB7(){
+  const matcher = createMatcher({
+    left: B7_LEFT,
+    right: shuffle(B7_RIGHT),
+    leftHead: 'Задача ИИ',
+    rightHead: 'Какие данные нужны'
+  });
+  return {
+    html: '<p class="task-desc">Сопоставь задачу искусственного интеллекта и данные, которые нужны для её обучения.</p>' + matcher.html,
+    mount: function(root){ matcher.mount(root); },
+    canCheck: function(){ return matcher.canCheck(); },
+    check: function(){
+      const r = matcher.check();
+      const pts = r.correct === 4 ? 1 : 0;
+      return { points: pts, max: 1, text: 'Верных пар: ' + r.correct + ' из ' + r.total + '.' };
+    }
+  };
+}
+
+/* ============ СЦЕНАРИЙ ============ */
+const STEPS = [
+  { type:'task', id:'A1', level:'A', max:2, short:'Соотнеси понятие и пример',
+    title:'Задание 1. Соотнеси понятие и пример', build: buildA1 },
+  { type:'task', id:'A2', level:'A', max:2, short:'Верно или неверно',
+    title:'Задание 2. Верно или неверно', build: buildA2 },
+  { type:'task', id:'A3', level:'A', max:2, short:'Выбери правильный ответ',
+    title:'Задание 3. Выбери правильный ответ', build: buildA3 },
+  { type:'task', id:'A4', level:'A', max:2, short:'Раздели данные по категориям',
+    title:'Задание 4. Раздели данные по категориям', build: buildA4 },
+  { type:'bridge' },
+  { type:'task', id:'B5', level:'B', max:1, short:'Найди ошибку в датасете',
+    title:'Задание 5. Найди ошибку в датасете', build: buildB5 },
+  { type:'task', id:'B6', level:'B', max:1, short:'Заполни пропуски',
+    title:'Задание 6. Заполни пропуски в тексте', build: buildB6 },
+  { type:'task', id:'B7', level:'B', max:1, short:'Сложные соответствия',
+    title:'Задание 7. Сложные соответствия', build: buildB7 }
+];
+
+const taskStage   = $('#taskStage');
+const checkBtn    = $('#checkBtn');
+const nextBtn     = $('#nextBtn');
+const prevTaskBtn = $('#prevTaskBtn');
+const levelPill   = $('#levelPill');
+const taskCounter = $('#taskCounter');
+const taskProgress= $('#taskProgress');
+
+let currentObj  = null;
+let currentStep = null;
+let currentChecked = false;
+
+function refreshCheckState(){
+  if (!currentObj || currentChecked){ checkBtn.disabled = true; return; }
+  if (typeof currentObj.canCheck === 'function') checkBtn.disabled = !currentObj.canCheck();
+  else checkBtn.disabled = false;
+}
+
+function startTrainer(){
+  app.step = 0;
+  app.scores = {};
+  showScreen('screen-trainer');
+  renderStep();
+}
+
+function levelScore(level){
+  return STEPS
+    .filter(s => s.type === 'task' && s.level === level)
+    .reduce((sum, s) => sum + (app.scores[s.id] || 0), 0);
+}
+
+function updateTaskNav(){
+  const nav = $('#taskNav');
+  const taskSteps = STEPS.filter(s => s.type === 'task');
+  let html = '<span class="task-nav-label">Задания:</span>';
+  taskSteps.forEach((s, i) => {
+    const stepIdx = STEPS.indexOf(s);
+    const isCurrent = (stepIdx === app.step);
+    const done = (app.scores[s.id] !== undefined);
+    const cls = 'task-nav-btn' + (isCurrent ? ' current' : '') + (done ? ' done' : '');
+    html += '<button type="button" class="' + cls + '" data-step="' + stepIdx + '" disabled title="' + s.short + '">' + (i + 1) + '</button>';
+  });
+  nav.innerHTML = html;
+
+}
+
+function updateTrainerHeader(){
+  const step = STEPS[app.step];
+  const taskSteps = STEPS.filter(s => s.type === 'task');
+  if (step.type === 'bridge'){
+    levelPill.textContent = 'Уровень А завершён';
+    levelPill.className = 'pill';
+    taskCounter.textContent = 'Итог уровня А';
+    taskProgress.style.width = '50%';
+    return;
+  }
+  const num = taskSteps.indexOf(step) + 1;
+  levelPill.textContent = step.level === 'A' ? 'Уровень А' : 'Уровень Б';
+  levelPill.className = 'pill' + (step.level === 'B' ? ' b' : '');
+  taskCounter.textContent = 'Задание ' + num + ' из ' + taskSteps.length;
+  taskProgress.style.width = (num / taskSteps.length * 100) + '%';
+}
+
+function renderBridge(){
+  const a = levelScore('A');
+  taskStage.innerHTML =
+    '<div class="bridge">' +
+      '<div class="bridge-icon">✅</div>' +
+      '<h2>Уровень А пройден!</h2>' +
+      '<p>Твой результат: <span class="score-big">' + a + ' из 8 баллов</span></p>' +
+      '<p>Дальше — <b>Уровень Б</b>: три задания на применение знаний. Каждое добавляет 1 балл, а итоговый балл не может быть больше 10.</p>' +
+      '<div class="bridge-buttons">' +
+        '<button type="button" class="btn btn-primary" id="toLevelB">Перейти к Уровню Б →</button>' +
+      '</div>' +
+    '</div>';
+  $('#toLevelB').addEventListener('click', () => { app.step++; renderStep(); });
+}
+
+function renderStep(){
+  const step = STEPS[app.step];
+  taskStage.scrollTop = 0;
+  updateTaskNav();
+  updateTrainerHeader();
+
+  if (step.type === 'bridge'){
+    checkBtn.classList.add('hidden');
+    nextBtn.classList.remove('hidden');
+    nextBtn.textContent = 'К Уровню Б →';
+    prevTaskBtn.classList.add('hidden');
+    nextBtn.disabled = false;
+    currentObj = null;
+    currentStep = null;
+    currentChecked = false;
+    renderBridge();
+    return;
+  }
+
+  currentStep = step;
+  currentObj = step.build();
+  currentChecked = false;
+
+  taskStage.innerHTML =
+    '<div class="wrap-narrow"><div class="task-head"><h2>' + step.title + '</h2></div></div>' +
+    currentObj.html +
+    '<div class="feedback" id="feedback"></div>';
+
+  currentObj.mount(taskStage);
+
+  checkBtn.classList.remove('hidden');
+  checkBtn.disabled = false;
+  nextBtn.classList.toggle('hidden', app.step === STEPS.length - 1);
+  nextBtn.textContent = 'Далее →';
+  prevTaskBtn.classList.add('hidden');
+  nextBtn.disabled = true;
+  refreshCheckState();
+}
+
+checkBtn.addEventListener('click', () => {
+  if (!currentObj || !currentStep || currentChecked) return;
+  const res = currentObj.check();
+  app.scores[currentStep.id] = res.points;
+  currentChecked = true;
+  checkBtn.disabled = true;
+  nextBtn.disabled = false;
+  updateTaskNav();
+  if (app.step === STEPS.length - 1){ setTimeout(showResults, 4000); }
+
+  const fb = $('#feedback');
+  if (fb){
+    fb.className = 'feedback show ' + (res.points === res.max ? 'good' : (res.points > 0 ? 'part' : 'bad'));
+    fb.innerHTML = '<b>' + res.points + ' из ' + res.max + ' баллов.</b> ' + res.text;
+    setTimeout(() => fb.scrollIntoView({ behavior:'smooth', block:'nearest' }), 60);
+  }
+});
+
+nextBtn.addEventListener('click', () => {
+  if (app.step < STEPS.length - 1){ app.step++; renderStep(); }
+  else showResults();
+});
+
+
+
+/* ============ ИТОГИ ============ */
+function gradeFor(score){
+  if (score >= 9) return {
+    badge:'🏆', cls:'excellent', label:'Отлично!',
+    desc:'Ты отлично разбираешься в понятиях данных и умеешь объяснять их роль в обучении ИИ.'
+  };
+  if (score >= 7) return {
+    badge:'👍', cls:'good', label:'Хорошо!',
+    desc:'Ты усвоил базовые понятия и роль данных для ИИ.'
+  };
+  if (score >= 4) return {
+    badge:'📘', cls:'ok', label:'Удовлетворительно',
+    desc:'Рекомендуется повторить различие между данными и информацией.'
+  };
+  return {
+    badge:'💪', cls:'low', label:'Пока недостаточно',
+    desc:'Повтори теорию и пройди тренажёр ещё раз — обязательно получится!'
+  };
+}
+
+function escapeHtml(s){
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function showResults(){
+  const a = levelScore('A');
+  const b = levelScore('B');
+  const total = Math.min(10, a + b);
+  const g = gradeFor(total);
+
+  $('#resultBadge').textContent = g.badge;
+
+  /* Имя ученика теперь выводится жирным */
+  const studentName = app.name || 'Ученик';
+  $('#resultName').innerHTML = 'Имя ученика: <b>' + escapeHtml(studentName) + '</b>';
+
+  $('#resultScore').textContent = total;
+
+  const gradeEl = $('#resultGrade');
+  gradeEl.textContent = g.label;
+  gradeEl.className = 'result-grade ' + g.cls;
+
+  $('#resultDesc').textContent = g.desc;
+
+  const rows = STEPS.filter(s => s.type === 'task').map(s => {
+    const p = app.scores[s.id] || 0;
+    return '<div class="bd-row"><span>' + s.id + '. ' + s.short + '</span><b>' + p + ' / ' + s.max + '</b></div>';
+  }).join('');
+  $('#resultBreakdown').innerHTML =
+    '<div class="bd-row"><span><b>Уровень А (задания 1–4)</b></span><b>' + a + ' / 8</b></div>' +
+    '<div class="bd-row"><span><b>Уровень Б (задания 5–7)</b></span><b>' + b + ' / 3</b></div>' +
+    '<div class="bd-row" style="border-top:1px solid #dbe6ee; margin-top:6px; padding-top:10px; font-size:14.5px;">' +
+      '<span><b>Итог (не более 10 баллов)</b></span><b>' + total + ' / 10</b></div>' +
+    '<div style="margin-top:12px">' + rows + '</div>';
+
+  showScreen('screen-result');
+}
+
+$('#retryBtn').addEventListener('click', () => {
+  app.scores = {};
+  startTrainer();
+});
+$('#theoryBtn').addEventListener('click', () => {
+  app.slide = 0;
+  showScreen('screen-theory');
+  renderSlide();
+});
+
+})();
+</script>
+</body>
+</html>
